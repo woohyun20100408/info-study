@@ -1,0 +1,822 @@
+/* ==========================================
+   1. CSS 변수 정의 (라이트 / 다크 모드)
+   ========================================== */
+:root {
+  --bg-color: #f7f8fa;
+  --card-bg: #ffffff;
+  --text-color: #191f28;
+  --gray-text: #8b95a1;
+  --border-color: #e5e8eb;
+  --topbar-bg: rgba(247, 248, 250, 0.85);
+  --nav-bg: rgba(255, 255, 255, 0.96);
+  --primary-color: #3182f6;
+  --primary-light: #edf5ff;
+  --hover-bg: #f9fafb;
+  --active-bg: #f2f4f6;
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+body.dark-mode {
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --text-color: #f3f4f6;
+  --gray-text: #9ca3af;
+  --border-color: #2c2c2c;
+  --topbar-bg: rgba(18, 18, 18, 0.85);
+  --nav-bg: rgba(30, 30, 30, 0.96);
+  --primary-light: #1e293b;
+  --hover-bg: #282828;
+  --active-bg: #333333;
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================
+   2. 기본 리셋 및 공통 스타일
+   ========================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+button {
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gray-text {
+  margin: 0;
+  color: var(--gray-text) !important;
+}
+
+/* ==========================================
+   3. 키프레임 애니메이션
+   ========================================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes xpFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 35%;
+  }
+}
+
+.fade-in {
+  animation: fadeInUp 0.35s ease-out forwards;
+}
+
+/* ==========================================
+   4. 레이아웃 (상단바, 네비게이션, 컨테이너)
+   ========================================== */
+.app {
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
+.container {
+  width: min(720px, calc(100% - 40px));
+  margin: auto;
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.topbar {
+  width: min(720px, calc(100% - 40px));
+  height: 72px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: transparent;
+}
+
+.topbar .logo {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+}
+
+.logout-button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--gray-text);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+}
+
+.logout-button:hover {
+  color: var(--text-color);
+  background-color: var(--hover-bg);
+}
+
+.logout-button:active {
+  transform: scale(0.94);
+}
+
+body.dark-mode .topbar .logout-button {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 74px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--border-color);
+  background: var(--nav-bg);
+  backdrop-filter: blur(10px);
+}
+
+.bottom-nav button {
+  width: 90px;
+  border: 0;
+  background: transparent;
+  color: var(--gray-text);
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.bottom-nav button span {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 4px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bottom-nav button:hover span {
+  transform: translateY(-2px);
+}
+
+.bottom-nav button:active {
+  transform: scale(0.92);
+}
+
+.bottom-nav button.active {
+  color: var(--primary-color);
+}
+
+.bottom-nav button.active span {
+  transform: scale(1.1);
+}
+
+/* ==========================================
+   5. 로그인 페이지
+   ========================================== */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+}
+
+.login-content {
+  width: min(420px, calc(100% - 40px));
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.login-content .logo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-subtitle {
+  text-align: center;
+  color: var(--gray-text);
+  font-size: 17px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.google-button {
+  width: 100%;
+  height: 56px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.google-button:hover {
+  background: var(--hover-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.google-button:active {
+  transform: scale(0.96);
+}
+
+/* ==========================================
+   6. 대시보드 및 홈 섹션
+   ========================================== */
+.page-header,
+.welcome {
+  padding: 30px 0 20px;
+}
+
+.welcome h1,
+.page-header h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+  letter-spacing: -1px;
+}
+
+.small-text {
+  margin: 0 0 8px;
+  color: var(--gray-text);
+  font-size: 14px;
+}
+
+.level-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 26px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.level-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.level-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.level-header strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 34px;
+  letter-spacing: -1px;
+}
+
+.level-label {
+  color: var(--gray-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.xp-text {
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.xp-bar {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border-color);
+}
+
+.xp-fill {
+  width: 35%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary-color);
+  animation: xpFill 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.xp-fill.zero {
+  width: 0%;
+  animation: none;
+}
+
+.level-info {
+  margin: 14px 0 0;
+  color: var(--gray-text);
+  font-size: 13px;
+}
+
+.section {
+  margin-top: 42px;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.section-title span {
+  color: var(--gray-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.section-title span:hover {
+  color: var(--primary-color);
+}
+
+/* ==========================================
+   7. 코스 및 학습 카드
+   ========================================== */
+.study-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 18px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.study-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.study-card:active {
+  transform: scale(0.97) translateY(0);
+}
+
+.study-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  font-size: 22px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.study-card:hover .study-icon {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+.study-info {
+  flex: 1;
+}
+
+.study-info h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+}
+
+.study-info p {
+  margin: 0;
+  color: var(--gray-text);
+  font-size: 13px;
+}
+
+.arrow {
+  color: var(--gray-text);
+  font-size: 28px;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.study-card:hover .arrow {
+  transform: translateX(3px);
+  color: var(--primary-color);
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.course-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.course-badge {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.course-badge.blue { background: #edf5ff; color: #3182f6; }
+.course-badge.green { background: #e8f7ee; color: #10b981; }
+.course-badge.purple { background: #f3e8ff; color: #a855f7; }
+.course-badge.orange { background: #fff2e8; color: #f97316; }
+
+.course-card h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.course-card p {
+  margin: 0 0 20px;
+  color: var(--gray-text);
+  font-size: 14px;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.course-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-footer span {
+  font-size: 12px;
+  color: var(--gray-text);
+  font-weight: 600;
+}
+
+.start-btn {
+  border: 0;
+  background: var(--primary-color);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.15s ease;
+}
+
+.start-btn:active {
+  transform: scale(0.95);
+}
+
+.start-btn.secondary {
+  background: var(--border-color);
+  color: var(--text-color);
+}
+
+.start-btn.secondary:hover {
+  background: var(--hover-bg);
+}
+
+/* ==========================================
+   8. 랭킹 탭
+   ========================================== */
+.ranking-podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px;
+  margin: 20px 0 30px;
+}
+
+.podium-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  width: 100px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.podium-item.rank-1 { height: 140px; justify-content: center; border: 2px solid #ffd700; }
+.podium-item.rank-2 { height: 120px; justify-content: center; }
+.podium-item.rank-3 { height: 110px; justify-content: center; }
+
+.podium-badge { font-size: 24px; margin-bottom: 6px; }
+.podium-name { font-size: 14px; margin-bottom: 4px; }
+.podium-xp { font-size: 11px; color: var(--gray-text); }
+
+.ranking-list {
+  background: var(--card-bg);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  gap: 16px;
+}
+
+.ranking-item + .ranking-item {
+  border-top: 1px solid var(--border-color);
+}
+
+.ranking-item.my-rank {
+  background: var(--primary-light);
+}
+
+.rank-num {
+  font-weight: 700;
+  font-size: 16px;
+  width: 24px;
+  color: var(--text-color);
+}
+
+.rank-user {
+  flex: 1;
+}
+
+.rank-user strong { font-size: 15px; }
+.rank-user p { margin: 2px 0 0; font-size: 12px; color: var(--gray-text); }
+
+.rank-xp {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 14px;
+}
+
+/* ==========================================
+   9. 프로필 & 설정 탭
+   ========================================== */
+.profile-header {
+  text-align: center;
+  padding: 30px 0 20px;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0 auto 14px;
+}
+
+.profile-header h2 { margin: 0 0 4px; font-size: 22px; }
+.profile-header p { margin: 0; font-size: 14px; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  padding: 18px 12px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.stat-num {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary-color);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--gray-text);
+}
+
+.menu-list {
+  background: var(--card-bg);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.menu-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--text-color);
+  transition: background-color 0.15s ease;
+}
+
+.menu-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.menu-item + .menu-item {
+  border-top: 1px solid var(--border-color);
+}
+
+.menu-item-left {
+  text-align: left;
+}
+
+/* ==========================================
+   10. 퀴즈 실행 & 결과
+   ========================================== */
+.quiz-container {
+  padding: 30px 0;
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.quiz-category {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.quiz-step {
+  font-size: 13px;
+  color: var(--gray-text);
+}
+
+.quiz-title {
+  margin: 24px 0 28px;
+  font-size: 22px;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-option-btn {
+  width: 100%;
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  text-align: left;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quiz-option-btn:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  background-color: var(--primary-light);
+}
+
+.quiz-option-btn.correct {
+  border-color: #10b981;
+  background-color: #e8f7ee;
+  color: #047857;
+  font-weight: 700;
+}
+
+.quiz-option-btn.wrong {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.quiz-feedback {
+  margin-top: 24px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-feedback.hidden {
+  display: none;
+}
+
+.correct-text {
+  color: #10b981;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.wrong-text {
+  color: #ef4444;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.quiz-result {
+  text-align: center;
+  padding: 50px 0 20px;
+}
+
+.result-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+}
+
+.result-xp-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  border-radius: 18px;
+  margin: 30px 0 40px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.result-xp-card .label {
+  font-size: 14px;
+  color: var(--gray-text);
+}
+
+.result-xp-card .value {
+  font-size: 28px;
+  color: var(--primary-color);
+}
+
+.empty-state {
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ==========================================
+   11. 모바일 반응형
+   ========================================== */
+@media (max-width: 600px) {
+  .welcome h1,
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .level-card {
+    padding: 22px;
+  }
+
+  .container,
+  .topbar {
+    width: calc(100% - 28px);
+  }
+}
