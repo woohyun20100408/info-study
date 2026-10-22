@@ -1,11 +1,65 @@
 import "./style.css";
 import { loginWithGoogle } from "./auth";
 import { getTopRankings } from "./ranking";
-import { QUIZ_DATA, finishQuiz } from "./study";
+import { 
+  QUIZ_DATA, 
+  finishQuiz, 
+  loginAsGuest, 
+  getUserProfile,
+  updateUserProfile 
+} from "./study";
 
 const app = document.querySelector("#app");
 
-// 테마 상태 초기화 (localStorage)
+// ==========================================
+// 공통 심플 회색 SVG 아이콘 모음 (#8b95a1)
+// ==========================================
+const ICONS = {
+  home: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b95a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
+  ide: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b95a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`,
+  ranking: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b95a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-2.34"></path><path d="M18 14.66V17c0 .55-.45 1-1 1h-2c-.55 0-1-.45-1-1v-2.34"></path><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path><path d="M6 9a6 6 0 0 0 12 0V3H6v6z"></path></svg>`,
+  profile: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b95a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+  quizCard: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8b95a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>`,
+  terminal: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b95a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>`,
+  download: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3182f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`
+};
+
+// ==========================================
+// 파이썬 실행 엔진 (Pyodide) 인스턴스
+// ==========================================
+let pyodideInstance = null;
+
+async function initPyodide() {
+  if (!pyodideInstance && window.loadPyodide) {
+    pyodideInstance = await window.loadPyodide();
+  }
+  return pyodideInstance;
+}
+
+// HTML 특수문자 이스케이프 함수
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// 문제 텍스트 및 코드 포맷팅
+function formatQuestionContent(questionText) {
+  if (questionText.includes("\n\n")) {
+    const splitIdx = questionText.indexOf("\n\n");
+    const prompt = questionText.substring(0, splitIdx);
+    const code = questionText.substring(splitIdx + 2);
+
+    return `
+      <div class="quiz-prompt">${prompt.replace(/\n/g, "<br>")}</div>
+      <pre class="quiz-code-block"><code>${escapeHtml(code)}</code></pre>
+    `;
+  }
+  return `<div class="quiz-prompt">${questionText.replace(/\n/g, "<br>")}</div>`;
+}
+
+// 테마 초기화
 function initTheme() {
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") {
@@ -15,11 +69,31 @@ function initTheme() {
   }
 }
 
-// 앱 시작 시 저장된 로그인 정보 확인 (자동 로그인)
-function initApp() {
+// 앱 시작
+async function initApp() {
   const savedUser = localStorage.getItem("infoStudy_user");
   if (savedUser) {
-    showApp(JSON.parse(savedUser));
+    const parsedUser = JSON.parse(savedUser);
+
+    // [스윙투앱 연동] 세션 유지되어 자동 로그인 시 앱 회원 등록
+    if (window.swingWebViewPlugin?.app?.login) {
+      window.swingWebViewPlugin.app.login.doAppLogin(
+        parsedUser.uid,
+        parsedUser.nickname || parsedUser.displayName || "학습자"
+      );
+    }
+
+    if (parsedUser.isGuest) {
+      showApp(parsedUser);
+    } else {
+      const freshProfile = await getUserProfile(parsedUser.uid);
+      if (freshProfile) {
+        localStorage.setItem("infoStudy_user", JSON.stringify(freshProfile));
+        showApp(freshProfile);
+      } else {
+        showApp(parsedUser);
+      }
+    }
   } else {
     showLogin();
   }
@@ -40,38 +114,74 @@ function showLogin() {
           <span>Google로 시작하기</span>
         </button>
 
-        <button id="guest-login" class="google-button" style="margin-top: 12px; background-color: #f1f3f5; color: #495057; border: none;">
-          <span>게스트로 둘러보기</span>
-        </button>
+        <div style="margin-top: 16px; width: 100%;">
+          <input type="text" id="guest-nickname-input" placeholder="게스트 닉네임 입력" style="width: 100%; padding: 12px; border: 1px solid #e5e8eb; border-radius: 8px; font-size: 14px; margin-bottom: 8px; outline: none; box-sizing: border-box;" />
+          <button id="guest-login" class="google-button" style="background-color: #f1f3f5; color: #495057; border: none; width: 100%;">
+            <span>게스트로 둘러보기</span>
+          </button>
+        </div>
       </div>
     </div>
   `;
 
-  // Google 로그인 처리
   document.querySelector("#google-login").addEventListener("click", async () => {
     const user = await loginWithGoogle();
     if (user) {
-      const userData = {
+      const existingProfile = await getUserProfile(user.uid);
+      
+      const userData = existingProfile ? {
+        ...existingProfile,
+        nickname: existingProfile.nickname || user.displayName || "학습자"
+      } : {
         uid: user.uid,
-        displayName: user.displayName || "학습자",
-        email: user.email,
+        nickname: user.displayName || "학습자",
+        email: user.email || "",
+        xp: 0,
+        level: 1,
         isGuest: false
       };
+
+      if (!existingProfile && typeof updateUserProfile === "function") {
+        await updateUserProfile(user.uid, {
+          nickname: userData.nickname,
+          email: userData.email,
+          xp: userData.xp,
+          level: userData.level
+        });
+      }
+
+      // [스윙투앱 연동] 구글 로그인 성공 시
+      if (window.swingWebViewPlugin?.app?.login) {
+        window.swingWebViewPlugin.app.login.doAppLogin(userData.uid, userData.nickname);
+      }
+
       localStorage.setItem("infoStudy_user", JSON.stringify(userData));
       showApp(userData);
     }
   });
 
-  // 게스트 로그인 처리
-  document.querySelector("#guest-login").addEventListener("click", () => {
-    const guestUser = {
-      uid: "guest_" + Date.now(),
-      displayName: "게스트",
-      email: "guest@infostudy.com",
-      isGuest: true
-    };
-    localStorage.setItem("infoStudy_user", JSON.stringify(guestUser));
-    showApp(guestUser);
+  document.querySelector("#guest-login").addEventListener("click", async () => {
+    const nicknameInput = document.querySelector("#guest-nickname-input");
+    const nickname = nicknameInput ? nicknameInput.value.trim() : "";
+    
+    if (!nickname) {
+      alert("닉네임을 입력해 주세요!");
+      return;
+    }
+
+    const guestUser = await loginAsGuest(nickname);
+    if (guestUser) {
+      guestUser.isGuest = true;
+      guestUser.nickname = nickname;
+
+      // [스윙투앱 연동] 게스트 로그인 성공 시
+      if (window.swingWebViewPlugin?.app?.login) {
+        window.swingWebViewPlugin.app.login.doAppLogin(guestUser.uid, `(게스트) ${nickname}`);
+      }
+
+      localStorage.setItem("infoStudy_user", JSON.stringify(guestUser));
+      showApp(guestUser);
+    }
   });
 }
 
@@ -89,22 +199,22 @@ function showApp(user) {
 
       <nav class="bottom-nav">
         <button class="nav-btn active" data-tab="home">
-          <span>⌂</span>
+          <span class="nav-icon-box">${ICONS.home}</span>
           <small>홈</small>
         </button>
 
         <button class="nav-btn" data-tab="study">
-          <span>▣</span>
-          <small>학습</small>
+          <span class="nav-icon-box">${ICONS.ide}</span>
+          <small>IDE</small>
         </button>
 
         <button class="nav-btn" data-tab="ranking">
-          <span>♛</span>
+          <span class="nav-icon-box">${ICONS.ranking}</span>
           <small>랭킹</small>
         </button>
 
         <button class="nav-btn" data-tab="profile">
-          <span>⚙</span>
+          <span class="nav-icon-box">${ICONS.profile}</span>
           <small>설정</small>
         </button>
       </nav>
@@ -115,6 +225,16 @@ function showApp(user) {
   const navButtons = document.querySelectorAll(".nav-btn");
 
   async function switchTab(tabName) {
+    let currentUser = JSON.parse(localStorage.getItem("infoStudy_user")) || user;
+    
+    if (!currentUser.isGuest) {
+      const freshData = await getUserProfile(currentUser.uid);
+      if (freshData) {
+        currentUser = freshData;
+        localStorage.setItem("infoStudy_user", JSON.stringify(currentUser));
+      }
+    }
+
     navButtons.forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.tab === tabName);
     });
@@ -122,41 +242,73 @@ function showApp(user) {
     if (tabName === "ranking") {
       mainContent.innerHTML = `<div class="empty-state"><p class="gray-text">랭킹 정보를 불러오는 중...</p></div>`;
       const rankData = await getTopRankings(10);
-      mainContent.innerHTML = renderRanking(user, rankData);
+      mainContent.innerHTML = renderRanking(currentUser, rankData);
     } else if (tabName === "home") {
-      mainContent.innerHTML = renderHome(user);
+      mainContent.innerHTML = renderHome(currentUser);
       bindHomeEvents();
     } else if (tabName === "study") {
       mainContent.innerHTML = renderStudy();
       bindStudyEvents();
     } else if (tabName === "profile") {
-      mainContent.innerHTML = renderMyInfo(user);
-      bindProfileEvents(user);
+      mainContent.innerHTML = renderMyInfo(currentUser);
+      bindProfileEvents(currentUser);
     }
   }
 
-  // 홈 화면 이벤트
   function bindHomeEvents() {
     const studyCard = document.querySelector(".study-card");
     if (studyCard) {
-      studyCard.addEventListener("click", () => startQuiz("algorithm"));
+      studyCard.addEventListener("click", () => {
+        startQuiz();
+      });
     }
   }
 
-  // 학습 목록 이벤트
   function bindStudyEvents() {
-    const startBtns = document.querySelectorAll(".start-quiz-btn");
-    startBtns.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const key = e.target.getAttribute("data-key");
-        startQuiz(key);
+    const runBtn = document.querySelector("#run-code-btn");
+    const codeInput = document.querySelector("#python-code-input");
+    const outputEl = document.querySelector("#python-output");
+
+    if (runBtn && codeInput && outputEl) {
+      runBtn.addEventListener("click", async () => {
+        if (!window.loadPyodide) {
+          outputEl.textContent = "❌ index.html에 Pyodide 스크립트가 추가되지 않았습니다.";
+          return;
+        }
+
+        const code = codeInput.value;
+        outputEl.textContent = "파이썬 엔진 준비 및 코드 실행 중...";
+        runBtn.disabled = true;
+        
+        const originalText = runBtn.textContent;
+        runBtn.textContent = "실행 중...";
+        runBtn.style.backgroundColor = "#8b95a1";
+
+        try {
+          const pyodide = await initPyodide();
+
+          pyodide.runPython(`
+import sys
+import io
+sys.stdout = io.StringIO()
+          `);
+
+          await pyodide.runPythonAsync(code);
+
+          const stdout = pyodide.runPython("sys.stdout.getvalue()");
+          outputEl.textContent = stdout || "(출력 결과가 없습니다)";
+        } catch (err) {
+          outputEl.textContent = "❌ 에러 발생:\n" + err.message;
+        } finally {
+          runBtn.disabled = false;
+          runBtn.textContent = originalText;
+          runBtn.style.backgroundColor = "#3182f6";
+        }
       });
-    });
+    }
   }
 
-  // 설정(프로필) 탭 이벤트 (테마 변경 + 닉네임 변경)
   function bindProfileEvents(userObj) {
-    // 테마 토글
     const themeToggleBtn = document.querySelector("#theme-toggle-btn");
     if (themeToggleBtn) {
       themeToggleBtn.addEventListener("click", () => {
@@ -170,12 +322,11 @@ function showApp(user) {
       });
     }
 
-    // 닉네임 저장
     const saveNicknameBtn = document.querySelector("#save-nickname-btn");
     const nicknameInput = document.querySelector("#nickname-input");
 
     if (saveNicknameBtn && nicknameInput) {
-      saveNicknameBtn.addEventListener("click", () => {
+      saveNicknameBtn.addEventListener("click", async () => {
         const newNickname = nicknameInput.value.trim();
 
         if (!newNickname) {
@@ -183,109 +334,248 @@ function showApp(user) {
           return;
         }
 
-        // 유저 객체 정보 업데이트 및 로컬 스토리지 저장
-        userObj.displayName = newNickname;
+        saveNicknameBtn.disabled = true;
+        saveNicknameBtn.textContent = "저장 중...";
+
+        userObj.nickname = newNickname;
         localStorage.setItem("infoStudy_user", JSON.stringify(userObj));
 
-        alert("닉네임이 성공적으로 변경되었습니다!");
-        
-        // 설정 화면 즉시 갱신
+        if (userObj.uid && !userObj.isGuest && typeof updateUserProfile === "function") {
+          await updateUserProfile(userObj.uid, { nickname: newNickname });
+        }
+
+        // [스윙투앱 연동] 닉네임 변경 시 스윙투앱 회원 정보도 업데이트
+        if (window.swingWebViewPlugin?.app?.login) {
+          window.swingWebViewPlugin.app.login.doAppLogin(userObj.uid, newNickname);
+        }
+
+        alert("닉네임이 저장되었습니다!");
         switchTab("profile");
+      });
+    }
+
+    // 🔥 infostudy.apk 다운로드 버튼 클릭 이벤트 (GitHub 저장소 직접 다운로드 링크 적용)
+    const downloadApkBtn = document.querySelector("#download-apk-btn");
+    if (downloadApkBtn) {
+      downloadApkBtn.addEventListener("click", () => {
+        window.open("https://github.com/woohyun20100408/info-study-apk/raw/main/infostudy.apk", "_blank");
       });
     }
   }
 
-  // 퀴즈 진행 로직
-  function startQuiz(courseKey) {
-    const course = QUIZ_DATA[courseKey] || QUIZ_DATA.algorithm;
+  function startQuiz() {
+    // 모든 단원에서 문제만 추출
+    let allQuestions = [];
+    Object.keys(QUIZ_DATA).forEach((key) => {
+      if (QUIZ_DATA[key] && Array.isArray(QUIZ_DATA[key].questions)) {
+        allQuestions.push(...QUIZ_DATA[key].questions);
+      }
+    });
+
+    if (allQuestions.length === 0) {
+      alert("현재 푸실 수 있는 문제가 없습니다.");
+      return;
+    }
+
+    // 문제 무작위 셔플 후 최대 5개 선택
+    const questions = [...allQuestions]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 5);
+
     let currentIndex = 0;
     let score = 0;
 
-    function renderQuestion() {
-      const q = course.questions[currentIndex];
-      const progressPercent = Math.round(((currentIndex + 1) / course.questions.length) * 100);
+    mainContent.innerHTML = `
+      <style>
+        .quiz-compact-container {
+          max-width: 520px;
+          margin: 0 auto;
+          padding: 8px 4px;
+        }
+        .quiz-prompt {
+          font-size: 15px;
+          font-weight: 600;
+          line-height: 1.45;
+          margin-bottom: 10px;
+          color: var(--text-color, #191f28);
+          word-break: keep-all;
+        }
+        .quiz-code-block {
+          background-color: #282c34;
+          color: #abb2bf;
+          font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+          font-size: 13.5px;
+          line-height: 1.45;
+          padding: 12px 14px;
+          border-radius: 8px;
+          margin: 8px 0 14px 0;
+          overflow-x: auto;
+          white-space: pre;
+          text-align: left;
+          box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
+        }
+        .quiz-option-compact {
+          width: 100%;
+          text-align: left;
+          padding: 10px 14px;
+          margin-bottom: 8px;
+          font-size: 14px;
+          border-radius: 8px;
+          border: 1px solid #e5e8eb;
+          background-color: var(--card-bg, #ffffff);
+          color: inherit;
+          cursor: pointer;
+          transition: background-color 0.15s ease;
+        }
+        .quiz-option-compact:hover {
+          background-color: #f2f4f6;
+        }
+        .quiz-option-compact.correct {
+          background-color: #e8f5e9 !important;
+          border-color: #2e7d32 !important;
+          color: #1b5e20 !important;
+          font-weight: 600;
+        }
+        .quiz-option-compact.wrong {
+          background-color: #ffebee !important;
+          border-color: #c62828 !important;
+          color: #b71c1c !important;
+        }
+      </style>
 
-      mainContent.innerHTML = `
-        <div class="quiz-container fade-in">
-          <div class="quiz-header">
-            <span class="quiz-category">${course.title}</span>
-            <span class="quiz-step">${currentIndex + 1} / ${course.questions.length}</span>
-          </div>
-
-          <div class="xp-bar">
-            <div class="xp-fill" style="width: ${progressPercent}%;"></div>
-          </div>
-
-          <h2 class="quiz-title">${q.question.replace(/\n/g, "<br>")}</h2>
-
-          <div class="quiz-options">
-            ${q.options
-              .map(
-                (opt, idx) => `
-              <button class="quiz-option-btn" data-index="${idx}">
-                <span>${idx + 1}. ${opt}</span>
-              </button>
-            `
-              )
-              .join("")}
-          </div>
-
-          <div id="quiz-feedback" class="quiz-feedback hidden"></div>
+      <div class="quiz-compact-container fade-in">
+        <div class="quiz-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span class="quiz-category" style="font-size: 13px; color: #3182f6; font-weight: 600;">랜덤 퀴즈</span>
+          <span class="quiz-step" style="font-size: 13px; color: #8b95a1;">1 / ${questions.length}</span>
         </div>
-      `;
 
-      const optionBtns = document.querySelectorAll(".quiz-option-btn");
-      optionBtns.forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const selectedIdx = parseInt(e.currentTarget.dataset.index);
-          handleAnswer(selectedIdx, q.answer, q.explanation);
+        <div style="width: 100%; height: 6px; background-color: #e5e8eb; border-radius: 3px; overflow: hidden; margin-bottom: 14px;">
+          <div id="quiz-progress-fill" style="width: 0%; height: 100%; background-color: #3182f6; border-radius: 3px; transition: width 0.3s ease-in-out;"></div>
+        </div>
+
+        <div id="quiz-body"></div>
+
+        <div class="quiz-options" style="margin-top: 10px;"></div>
+
+        <div id="quiz-feedback" class="quiz-feedback hidden" style="margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 13.5px;"></div>
+
+        <div id="quiz-next-container" class="hidden" style="margin-top: 14px;">
+          <button id="next-question-btn" class="google-button" style="width: 100%; height: 44px; font-size: 15px;">다음 문제</button>
+        </div>
+      </div>
+    `;
+
+    const quizStep = mainContent.querySelector(".quiz-step");
+    const progressFill = mainContent.querySelector("#quiz-progress-fill");
+    const quizBody = mainContent.querySelector("#quiz-body");
+    const quizOptions = mainContent.querySelector(".quiz-options");
+    const feedbackEl = mainContent.querySelector("#quiz-feedback");
+    const nextContainer = mainContent.querySelector("#quiz-next-container");
+    const nextBtn = mainContent.querySelector("#next-question-btn");
+
+    function renderQuestion() {
+      const q = questions[currentIndex];
+
+      const optionsWithMeta = q.options.map((opt, idx) => ({
+        text: opt,
+        isCorrect: idx === q.answer
+      })).sort(() => Math.random() - 0.5);
+
+      const shuffledOptions = optionsWithMeta.map(item => item.text);
+      const newCorrectIndex = optionsWithMeta.findIndex(item => item.isCorrect);
+
+      if (quizStep) quizStep.textContent = `${currentIndex + 1} / ${questions.length}`;
+      if (quizBody) quizBody.innerHTML = formatQuestionContent(q.question);
+
+      const currentPercent = (currentIndex / questions.length) * 100;
+      if (progressFill) progressFill.style.width = `${currentPercent}%`;
+
+      if (feedbackEl) {
+        feedbackEl.innerHTML = "";
+        feedbackEl.classList.add("hidden");
+      }
+      if (nextContainer) {
+        nextContainer.classList.add("hidden");
+      }
+
+      if (quizOptions) {
+        quizOptions.innerHTML = shuffledOptions
+          .map(
+            (opt, idx) => `
+            <button class="quiz-option-compact" data-index="${idx}">
+              <span><strong>${idx + 1}.</strong> ${escapeHtml(opt)}</span>
+            </button>
+          `
+          )
+          .join("");
+
+        const optionBtns = quizOptions.querySelectorAll(".quiz-option-compact");
+        optionBtns.forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const selectedIdx = parseInt(e.currentTarget.dataset.index);
+            handleAnswer(selectedIdx, newCorrectIndex, q.explanation);
+          });
         });
-      });
+      }
     }
 
     function handleAnswer(selected, correct, explanation) {
-      const optionBtns = document.querySelectorAll(".quiz-option-btn");
-      const feedbackEl = document.querySelector("#quiz-feedback");
-
+      const optionBtns = quizOptions.querySelectorAll(".quiz-option-compact");
       optionBtns.forEach((btn) => (btn.disabled = true));
+
+      const solvedPercent = ((currentIndex + 1) / questions.length) * 100;
+      if (progressFill) progressFill.style.width = `${solvedPercent}%`;
 
       if (selected === correct) {
         score++;
         optionBtns[selected].classList.add("correct");
-        feedbackEl.innerHTML = `<p class="correct-text">⭕ 정답입니다!</p><small>${explanation}</small>`;
+        feedbackEl.innerHTML = `<p style="color: #2e7d32; font-weight: 600; margin: 0 0 4px 0;">⭕ 정답입니다!</p><small style="color: #4e5968; line-height: 1.4;">${explanation}</small>`;
       } else {
         optionBtns[selected].classList.add("wrong");
         optionBtns[correct].classList.add("correct");
-        feedbackEl.innerHTML = `<p class="wrong-text">❌ 오답입니다.</p><small>${explanation}</small>`;
+        feedbackEl.innerHTML = `<p style="color: #c62828; font-weight: 600; margin: 0 0 4px 0;">❌ 오답입니다.</p><small style="color: #4e5968; line-height: 1.4;">${explanation}</small>`;
       }
 
       feedbackEl.classList.remove("hidden");
 
-      setTimeout(async () => {
+      const isLastQuestion = currentIndex === questions.length - 1;
+      nextBtn.textContent = isLastQuestion ? "결과 보기" : "다음 문제";
+      nextContainer.classList.remove("hidden");
+
+      nextBtn.onclick = async () => {
         currentIndex++;
-        if (currentIndex < course.questions.length) {
+        if (currentIndex < questions.length) {
           renderQuestion();
         } else {
+          const currentUser = JSON.parse(localStorage.getItem("infoStudy_user")) || user;
+          const isGuest = Boolean(currentUser.isGuest);
           const earnedXP = score * 10;
-          await finishQuiz(user.uid, earnedXP, course.questions.length);
-          renderResult(score, course.questions.length, earnedXP);
+          
+          if (!isGuest) {
+            await finishQuiz(currentUser.uid, earnedXP, questions.length);
+            const updatedProfile = await getUserProfile(currentUser.uid);
+            if (updatedProfile) {
+              localStorage.setItem("infoStudy_user", JSON.stringify(updatedProfile));
+            }
+          }
+
+          renderResult(score, questions.length);
         }
-      }, 2000);
+      };
     }
 
-    function renderResult(correctCount, totalCount, earnedXP) {
+    function renderResult(correctCount, totalCount) {
       mainContent.innerHTML = `
-        <div class="quiz-result fade-in">
-          <div class="result-icon">🎉</div>
-          <h2>학습 완료!</h2>
-          <p class="gray-text">${totalCount}문제 중 ${correctCount}문제를 맞췄습니다.</p>
+        <div class="quiz-result fade-in" style="text-align: center; padding: 32px 10px;">
+          <div class="result-icon" style="margin-bottom: 12px;">${ICONS.quizCard}</div>
+          <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">수고하셨습니다!</h2>
+          <p class="gray-text" style="font-size: 15px; color: #6b7684; margin-bottom: 28px;">
+            ${totalCount}문제 중 <strong style="color: #3182f6;">${correctCount}문제</strong>를 맞췄습니다.
+          </p>
 
-          <div class="result-xp-card">
-            <span class="label">획득한 경험치</span>
-            <strong class="value">+${earnedXP} XP</strong>
-          </div>
-
-          <button id="go-home-btn" class="google-button">홈으로 돌아가기</button>
+          <button id="go-home-btn" class="google-button" style="width: 100%; height: 48px; font-size: 15px; font-weight: 600;">
+            홈으로 돌아가기
+          </button>
         </div>
       `;
 
@@ -297,12 +587,216 @@ function showApp(user) {
     renderQuestion();
   }
 
+  function renderHome(user) {
+    const isGuest = Boolean(user.isGuest);
+    const totalXP = user.xp || 0;
+    const level = user.level || Math.floor(totalXP / 100) + 1;
+    const currentLevelXP = totalXP % 100;
+    const remainingXP = 100 - currentLevelXP;
+
+    return `
+      <section class="welcome fade-in">
+        <p class="small-text">오늘도 꾸준히</p>
+        <h1>${user.nickname || user.displayName || "학습자"}님, 안녕하세요</h1>
+        <p class="gray-text">${isGuest ? "게스트 모드로 이용 중입니다." : "랜덤 학습 코스를 시작해보세요."}</p>
+      </section>
+
+      <section class="level-card fade-in">
+        <div class="level-header">
+          <div>
+            <span class="level-label">LEVEL</span>
+            <strong>${level}</strong>
+          </div>
+          <span class="xp-text">${currentLevelXP} / 100 XP</span>
+        </div>
+
+        <div class="xp-bar" style="width: 100%; height: 10px; background-color: #e5e8eb; border-radius: 5px; overflow: hidden; margin: 8px 0;">
+          <div style="width: ${currentLevelXP}%; height: 100%; background-color: #3182f6; border-radius: 5px; transition: width 0.5s ease-in-out;"></div>
+        </div>
+
+        ${
+          isGuest
+            ? `<p class="level-info" style="color: #e53e3e; font-weight: 600;">게스트 계정에서는 일부 기능이 제한됩니다</p>`
+            : `<p class="level-info">다음 레벨까지 ${remainingXP} XP (총 누적: ${totalXP} XP)</p>`
+        }
+      </section>
+
+      <section class="section fade-in">
+        <div class="section-title">
+          <h2>실력 점검</h2>
+        </div>
+
+        <button class="study-card" style="cursor: pointer; text-align: left; width: 100%; display: flex; align-items: center;">
+          <div class="study-icon" style="display: flex; align-items: center; justify-content: center; background: #f2f4f6; width: 40px; height: 40px; border-radius: 8px; margin-right: 12px;">
+            ${ICONS.quizCard}
+          </div>
+          <div class="study-info" style="flex: 1;">
+            <h3>랜덤 퀴즈 시작하기</h3>
+            <p>전체 학습 코스 중 무작위 문제 풀이</p>
+          </div>
+          <div class="arrow">›</div>
+        </button>
+      </section>
+    `;
+  }
+
+  function renderStudy() {
+    return `
+      <section class="page-header fade-in">
+        <h1>파이썬 연습장</h1>
+        <p class="gray-text" style="font-size: 13px;">웹 브라우저에서 파이썬 코드를 작성하고 실행하세요.</p>
+      </section>
+
+      <section class="ide-container fade-in" style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="code-editor-box" style="border: 1px solid #e5e8eb; border-radius: 12px; overflow: hidden; background: #282c34; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+          <div style="background: #21252b; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #181a1f;">
+            <span style="color: #abb2bf; font-size: 13px; font-family: 'Consolas', monospace; font-weight: 600;">main.py</span>
+            <button id="run-code-btn" style="background-color: #3182f6; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: background-color 0.2s;">
+              ▶ 실행하기
+            </button>
+          </div>
+          <textarea id="python-code-input" style="width: 100%; height: 200px; background: transparent; color: #abb2bf; border: none; padding: 14px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.5; outline: none; resize: vertical; box-sizing: border-box;" spellcheck="false" placeholder="파이썬 코드를 입력하세요...">print("Hello, InfoStudy!")</textarea>
+        </div>
+
+        <div class="code-output-box" style="border: 1px solid #e5e8eb; border-radius: 12px; padding: 14px; background-color: var(--card-bg, #ffffff); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--text-color, #333333); display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-flex; align-items: center;">${ICONS.terminal}</span> 실행 결과
+          </h4>
+          <pre id="python-output" style="margin: 0; padding: 12px; background: #f8f9fa; border-radius: 8px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13.5px; color: #212529; min-height: 80px; white-space: pre-wrap; word-break: break-all; border: 1px solid #e9ecef;">[▶ 실행하기] 버튼을 누르면 여기에 결과가 출력됩니다.</pre>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderRanking(currentUser, rankList) {
+    if (!rankList || rankList.length === 0) {
+      return `
+        <section class="page-header fade-in">
+          <h1>실시간 랭킹</h1>
+          <p class="gray-text">등록된 랭킹 데이터가 없습니다.</p>
+        </section>
+      `;
+    }
+
+    const getDisplayName = (item) => {
+      if (item.uid === currentUser.uid && currentUser.nickname) {
+        return currentUser.nickname;
+      }
+      return item.nickname || item.name || "학습자";
+    };
+
+    const top3 = rankList.slice(0, 3);
+
+    return `
+      <section class="page-header fade-in">
+        <h1>실시간 랭킹</h1>
+        <p class="gray-text">전체 학습자의 XP 순위입니다.</p>
+      </section>
+
+      <section class="ranking-podium fade-in">
+        ${top3[1] ? `
+          <div class="podium-item rank-2">
+            <span class="podium-badge">2</span>
+            <strong class="podium-name">${getDisplayName(top3[1])}</strong>
+            <span class="podium-xp">${top3[1].xp || 0} XP</span>
+          </div>
+        ` : ''}
+
+        ${top3[0] ? `
+          <div class="podium-item rank-1">
+            <span class="podium-badge">1</span>
+            <strong class="podium-name">${getDisplayName(top3[0])}</strong>
+            <span class="podium-xp">${top3[0].xp || 0} XP</span>
+          </div>
+        ` : ''}
+
+        ${top3[2] ? `
+          <div class="podium-item rank-3">
+            <span class="podium-badge">3</span>
+            <strong class="podium-name">${getDisplayName(top3[2])}</strong>
+            <span class="podium-xp">${top3[2].xp || 0} XP</span>
+          </div>
+        ` : ''}
+      </section>
+
+      <section class="ranking-list fade-in">
+        ${rankList
+          .map((item, index) => {
+            const isMe = item.uid === currentUser.uid;
+            const displayName = getDisplayName(item);
+            return `
+              <div class="ranking-item ${isMe ? "my-rank" : ""}">
+                <span class="rank-num">${index + 1}</span>
+                <div class="rank-user">
+                  <strong>${displayName} ${isMe ? "<small>(나)</small>" : ""}</strong>
+                  <p>Lv. ${item.level || 1}</p>
+                </div>
+                <span class="rank-xp">${item.xp || 0} XP</span>
+              </div>
+            `;
+          })
+          .join("")}
+      </section>
+    `;
+  }
+
+  function renderMyInfo(user) {
+    const isDark = document.body.classList.contains("dark-mode");
+    const nickname = user.nickname || user.displayName || "학습자";
+
+    return `
+      <section class="profile-header fade-in">
+        <div class="profile-avatar">${nickname[0]}</div>
+        <h2>${nickname}님</h2>
+        <p class="gray-text">${user.isGuest ? "게스트 계정" : (user.email || "이메일 없음")}</p>
+      </section>
+
+      <section class="section fade-in">
+        <div class="section-title">
+          <h2>설정 및 앱 정보</h2>
+        </div>
+
+        <div class="menu-list">
+          <div style="padding: 16px; background-color: var(--card-bg, #ffffff); border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(0, 0, 0, 0.05);">
+            <label for="nickname-input" style="display: block; font-size: 13px; color: var(--gray-text, #888888); margin-bottom: 8px;">닉네임 변경</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="nickname-input" value="${nickname}" maxlength="10" placeholder="닉네임 입력" style="flex: 1; padding: 10px 12px; border: 1px solid #e5e8eb; border-radius: 8px; font-size: 14px; outline: none; background: transparent; color: inherit;" />
+              <button id="save-nickname-btn" style="padding: 10px 16px; background-color: #3182f6; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">저장</button>
+            </div>
+          </div>
+
+          <button id="theme-toggle-btn" class="menu-item" style="margin-bottom: 12px;">
+            <div class="menu-item-left">
+              <span>테마 변경</span>
+              <small id="theme-label" class="gray-text" style="display:block; font-size:12px; margin-top:2px;">${isDark ? "다크 모드" : "라이트 모드"}</small>
+            </div>
+            <span class="arrow">›</span>
+          </button>
+
+          <!-- 🔥 APK 다운로드 버튼 -->
+          <button id="download-apk-btn" class="menu-item">
+            <div class="menu-item-left">
+              <span style="font-weight: 600; color: #3182f6;">Android 앱(APK) 다운로드</span>
+              <small class="gray-text" style="display:block; font-size:12px; margin-top:2px;">인포스터디 앱 설치 파일 받기</small>
+            </div>
+            <span class="arrow">›</span>
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
   navButtons.forEach((btn) => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 
-  // 로그아웃 처리
+  // 로그아웃 이벤트 처리
   document.querySelector("#logout").addEventListener("click", () => {
+    // [스윙투앱 연동] 로그아웃 시 스윙투앱 회원 해제
+    if (window.swingWebViewPlugin?.app?.login) {
+      window.swingWebViewPlugin.app.login.doAppLogout();
+    }
+
     localStorage.removeItem("infoStudy_user");
     showLogin();
   });
@@ -310,177 +804,4 @@ function showApp(user) {
   switchTab("home");
 }
 
-function renderHome(user) {
-  return `
-    <section class="welcome fade-in">
-      <p class="small-text">오늘도 꾸준히</p>
-      <h1>${user.displayName || "학습자"}님, 안녕하세요</h1>
-      <p class="gray-text">오늘의 추천 코스를 시작해보세요.</p>
-    </section>
-
-    <section class="level-card fade-in">
-      <div class="level-header">
-        <div>
-          <span class="level-label">LEVEL</span>
-          <strong>1</strong>
-        </div>
-        <span class="xp-text">0 / 100 XP</span>
-      </div>
-
-      <div class="xp-bar">
-        <div class="xp-fill zero"></div>
-      </div>
-
-      <p class="level-info">다음 레벨까지 100 XP</p>
-    </section>
-
-    <section class="section fade-in">
-      <div class="section-title">
-        <h2>오늘의 추천 학습</h2>
-      </div>
-
-      <button class="study-card">
-        <div class="study-icon">⌘</div>
-        <div class="study-info">
-          <h3>알고리즘 & 프로그래밍</h3>
-          <p>4문제 · 약 5분</p>
-        </div>
-        <div class="arrow">›</div>
-      </button>
-    </section>
-  `;
-}
-
-function renderStudy() {
-  return `
-    <section class="page-header fade-in">
-      <h1>학습 코스</h1>
-      <p class="gray-text">고등학교 정보 교과 과정 기반 퀴즈입니다.</p>
-    </section>
-
-    <section class="course-grid fade-in">
-      ${Object.keys(QUIZ_DATA)
-        .map((key) => {
-          const item = QUIZ_DATA[key];
-          return `
-            <div class="course-card">
-              <div class="course-badge ${item.badgeColor}">${item.badge}</div>
-              <h3>${item.title}</h3>
-              <p>${item.description}</p>
-              <div class="course-footer">
-                <span>${item.questions.length} 문제</span>
-                <button class="start-btn start-quiz-btn" data-key="${key}">시작하기</button>
-              </div>
-            </div>
-          `;
-        })
-        .join("")}
-    </section>
-  `;
-}
-
-function renderRanking(currentUser, rankList) {
-  if (!rankList || rankList.length === 0) {
-    return `
-      <section class="page-header fade-in">
-        <h1>실시간 랭킹</h1>
-        <p class="gray-text">등록된 랭킹 데이터가 없습니다.</p>
-      </section>
-    `;
-  }
-
-  const top3 = rankList.slice(0, 3);
-
-  return `
-    <section class="page-header fade-in">
-      <h1>실시간 랭킹</h1>
-      <p class="gray-text">전체 학습자의 XP 순위입니다.</p>
-    </section>
-
-    <section class="ranking-podium fade-in">
-      ${top3[1] ? `
-        <div class="podium-item rank-2">
-          <span class="podium-badge">🥈</span>
-          <strong class="podium-name">${top3[1].name || "학습자"}</strong>
-          <span class="podium-xp">${top3[1].xp || 0} XP</span>
-        </div>
-      ` : ''}
-
-      ${top3[0] ? `
-        <div class="podium-item rank-1">
-          <span class="podium-badge">🥇</span>
-          <strong class="podium-name">${top3[0].name || "학습자"}</strong>
-          <span class="podium-xp">${top3[0].xp || 0} XP</span>
-        </div>
-      ` : ''}
-
-      ${top3[2] ? `
-        <div class="podium-item rank-3">
-          <span class="podium-badge">🥉</span>
-          <strong class="podium-name">${top3[2].name || "학습자"}</strong>
-          <span class="podium-xp">${top3[2].xp || 0} XP</span>
-        </div>
-      ` : ''}
-    </section>
-
-    <section class="ranking-list fade-in">
-      ${rankList
-        .map((item, index) => {
-          const isMe = item.uid === currentUser.uid;
-          return `
-            <div class="ranking-item ${isMe ? "my-rank" : ""}">
-              <span class="rank-num">${index + 1}</span>
-              <div class="rank-user">
-                <strong>${item.name || "학습자"} ${isMe ? "<small>(나)</small>" : ""}</strong>
-                <p>Lv. ${item.level || 1}</p>
-              </div>
-              <span class="rank-xp">${item.xp || 0} XP</span>
-            </div>
-          `;
-        })
-        .join("")}
-    </section>
-  `;
-}
-
-// 설정 탭 뷰 렌더링 (닉네임 설정 입력창 추가)
-function renderMyInfo(user) {
-  const isDark = document.body.classList.contains("dark-mode");
-
-  return `
-    <section class="profile-header fade-in">
-      <div class="profile-avatar">${(user.displayName || "학")[0]}</div>
-      <h2>${user.displayName || "학습자"}님</h2>
-      <p class="gray-text">${user.email || "user@infostudy.com"}</p>
-    </section>
-
-    <section class="section fade-in">
-      <div class="section-title">
-        <h2>설정</h2>
-      </div>
-
-      <div class="menu-list">
-        <!-- 닉네임 변경 카드 -->
-        <div style="padding: 16px; background-color: var(--card-bg, #ffffff); border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(0, 0, 0, 0.05);">
-          <label for="nickname-input" style="display: block; font-size: 13px; color: var(--gray-text, #888888); margin-bottom: 8px;">닉네임 변경</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="nickname-input" value="${user.displayName || "학습자"}" maxlength="10" placeholder="닉네임 입력" style="flex: 1; padding: 10px 12px; border: 1px solid #e5e8eb; border-radius: 8px; font-size: 14px; outline: none; background: transparent; color: inherit;" />
-            <button id="save-nickname-btn" style="padding: 10px 16px; background-color: #3182f6; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">저장</button>
-          </div>
-        </div>
-
-        <!-- 테마 변경 버튼 -->
-        <button id="theme-toggle-btn" class="menu-item">
-          <div class="menu-item-left">
-            <span>테마 변경</span>
-            <small id="theme-label" class="gray-text" style="display:block; font-size:12px; margin-top:2px;">${isDark ? "다크 모드" : "라이트 모드"}</small>
-          </div>
-          <span class="arrow">›</span>
-        </button>
-      </div>
-    </section>
-  `;
-}
-
-// 앱 최초 실행
 initApp();
