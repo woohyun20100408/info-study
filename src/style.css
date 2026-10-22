@@ -820,3 +820,30 @@ body.dark-mode .topbar .logout-button {
     width: calc(100% - 28px);
   }
 }
+
+/* 다크 모드에서도 홈의 랜덤 퀴즈 버튼은 밝고 선명하게 표시 */
+body.dark-mode .study-card {
+  background-color: #ffffff;
+  color: #191f28;
+  border-color: #e5e8eb;
+}
+
+body.dark-mode .study-card .study-info h3 {
+  color: #191f28;
+}
+
+body.dark-mode .study-card .study-info p {
+  color: #5b6470;
+}
+
+body.dark-mode .study-card .arrow {
+  color: #606b78;
+}
+
+body.dark-mode .study-card:hover {
+  background-color: #f7f8fa;
+}
+
+body.dark-mode .study-card:active {
+  background-color: #f2f4f6;
+}
