@@ -1,16 +1,17 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth"; // 👈 추가
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBP_GQh6Fm01jXX4R-UaHctWbE6N3aF4DY",
-    authDomain: "info-study-9b9a4.firebaseapp.com",
-    projectId: "info-study-9b9a4",
-    storageBucket: "info-study-9b9a4.firebasestorage.app",
-    messagingSenderId: "374066535046",
-    appId: "1:374066535046:web:7987596301d00ed3a04f07"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
+
 export const db = getFirestore(app);
-export const auth = getAuth(app); // 👈 export 추가
+export const auth = getAuth(app);
