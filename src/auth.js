@@ -1,27 +1,23 @@
-import {
-  GoogleAuthProvider,
-  signInWithPopup
-} from "firebase/auth";
-
-import {
-  doc,
-  getDoc,
-  setDoc
-} from "firebase/firestore";
-
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
 const provider = new GoogleAuthProvider();
 
+// 🔥 계정 선택 창이 항상 뜨도록 설정 추가
+provider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 export async function loginWithGoogle() {
   try {
-    // Google 로그인
+    // 1. Google 로그인
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    console.log("✅ Google 인증 성공:", user.email);
+    console.log("Google 인증 성공:", user.email);
 
-    // Firestore 사용자 문서
+    // 2. Firestore 사용자 문서 동기화
     const userRef = doc(db, "users", user.uid);
     const userSnapshot = await getDoc(userRef);
 
@@ -40,10 +36,22 @@ export async function loginWithGoogle() {
         solvedProblems: 0
       });
 
-      console.log("✅ 사용자 데이터 생성 완료");
+      console.log("사용자 데이터 생성 완료");
     } else {
-      console.log("✅ 기존 사용자입니다.");
+      console.log("기존 사용자입니다.");
     }
+
+    // ----------------------------------------------------
+    // 🔥 [추가] 스윙투앱 웹뷰 회원 연동
+    // ----------------------------------------------------
+    if (window.swingWebViewPlugin?.app?.login) {
+      const userId = user.uid; // 또는 user.email
+      const userName = user.displayName || user.email || "사용자";
+
+      window.swingWebViewPlugin.app.login.doAppLogin(userId, userName);
+      console.log("스윙투앱 앱 회원 연동 성공");
+    }
+    // ----------------------------------------------------
 
     return user;
 
