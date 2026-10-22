@@ -821,29 +821,29 @@ body.dark-mode .topbar .logout-button {
   }
 }
 
-/* 다크 모드에서도 홈의 랜덤 퀴즈 버튼은 밝고 선명하게 표시 */
+/* 다크 모드: 퀴즈 카드 배경은 어둡게, 제목과 설명은 밝게 표시 */
 body.dark-mode .study-card {
-  background-color: #ffffff;
-  color: #191f28;
-  border-color: #e5e8eb;
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border-color: #3a3a3a;
 }
 
 body.dark-mode .study-card .study-info h3 {
-  color: #191f28;
+  color: #ffffff;
 }
 
 body.dark-mode .study-card .study-info p {
-  color: #5b6470;
+  color: #d1d5db;
 }
 
 body.dark-mode .study-card .arrow {
-  color: #606b78;
+  color: #e5e7eb;
 }
 
 body.dark-mode .study-card:hover {
-  background-color: #f7f8fa;
+  background-color: #282828;
 }
 
 body.dark-mode .study-card:active {
-  background-color: #f2f4f6;
+  background-color: #333333;
 }
