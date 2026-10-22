@@ -6,7 +6,8 @@ import {
   finishQuiz, 
   loginAsGuest, 
   getUserProfile,
-  updateUserProfile 
+  updateUserProfile,
+  createRandomizedQuestion
 } from "./study";
 
 const app = document.querySelector("#app");
@@ -267,6 +268,7 @@ function showApp(user) {
   function bindStudyEvents() {
     const runBtn = document.querySelector("#run-code-btn");
     const codeInput = document.querySelector("#python-code-input");
+    const inputValues = document.querySelector("#python-stdin-input");
     const outputEl = document.querySelector("#python-output");
 
     if (runBtn && codeInput && outputEl) {
@@ -286,11 +288,32 @@ function showApp(user) {
 
         try {
           const pyodide = await initPyodide();
+          if (!pyodide) {
+            throw new Error("파이썬 엔진을 불러오지 못했습니다. 페이지를 새로고침해 주세요.");
+          }
 
+          pyodide.globals.set("infoStudyInputText", inputValues ? inputValues.value : "");
           pyodide.runPython(`
 import sys
 import io
+import builtins
+
+_info_study_original_stdout = sys.stdout
+_info_study_original_input = builtins.input
 sys.stdout = io.StringIO()
+_info_study_input_lines = iter(infoStudyInputText.splitlines())
+
+def _info_study_input(prompt=""):
+    if prompt:
+        print(prompt, end="")
+    try:
+        value = next(_info_study_input_lines)
+    except StopIteration:
+        raise EOFError("input()에 사용할 입력값이 부족합니다. 입력값 칸에 한 줄씩 추가하세요.")
+    print(value)
+    return value
+
+builtins.input = _info_study_input
           `);
 
           await pyodide.runPythonAsync(code);
@@ -298,8 +321,21 @@ sys.stdout = io.StringIO()
           const stdout = pyodide.runPython("sys.stdout.getvalue()");
           outputEl.textContent = stdout || "(출력 결과가 없습니다)";
         } catch (err) {
-          outputEl.textContent = "❌ 에러 발생:\n" + err.message;
+          let partialOutput = "";
+          try {
+            partialOutput = pyodideInstance ? (pyodideInstance.runPython("sys.stdout.getvalue()") || "") : "";
+          } catch {
+            // 출력 버퍼가 준비되기 전에 발생한 오류는 별도로 표시한다.
+          }
+          outputEl.textContent = (partialOutput ? partialOutput + "\n" : "") + "❌ 에러 발생:\n" + err.message;
         } finally {
+          if (pyodideInstance) {
+            try {
+              pyodideInstance.runPython("builtins.input = _info_study_original_input\nsys.stdout = _info_study_original_stdout");
+            } catch {
+              // 초기화 도중 실패한 경우 출력/입력 복원은 건너뛴다.
+            }
+          }
           runBtn.disabled = false;
           runBtn.textContent = originalText;
           runBtn.style.backgroundColor = "#3182f6";
@@ -368,7 +404,7 @@ sys.stdout = io.StringIO()
     let allQuestions = [];
     Object.keys(QUIZ_DATA).forEach((key) => {
       if (QUIZ_DATA[key] && Array.isArray(QUIZ_DATA[key].questions)) {
-        allQuestions.push(...QUIZ_DATA[key].questions);
+        allQuestions.push(...QUIZ_DATA[key].questions.map((question) => createRandomizedQuestion(key, question)));
       }
     });
 
@@ -656,6 +692,12 @@ sys.stdout = io.StringIO()
             </button>
           </div>
           <textarea id="python-code-input" style="width: 100%; height: 200px; background: transparent; color: #abb2bf; border: none; padding: 14px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.5; outline: none; resize: vertical; box-sizing: border-box;" spellcheck="false" placeholder="파이썬 코드를 입력하세요...">print("Hello, InfoStudy!")</textarea>
+        </div>
+
+        <div class="code-input-box" style="border: 1px solid #e5e8eb; border-radius: 12px; padding: 14px; background-color: var(--card-bg, #ffffff); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <label for="python-stdin-input" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-color, #333333);">input() 입력값</label>
+          <p style="margin: 0 0 10px; font-size: 12px; color: var(--gray-text, #8b95a1); line-height: 1.5;">코드에서 input()을 호출하는 순서대로 한 줄에 하나씩 입력하세요. 예: 숫자나 이름</p>
+          <textarea id="python-stdin-input" rows="3" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #e5e8eb; border-radius: 8px; background: var(--card-bg, #ffffff); color: var(--text-color, #333333); font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.5; resize: vertical;" spellcheck="false" placeholder="첫 번째 입력값&#10;두 번째 입력값&#10;세 번째 입력값"></textarea>
         </div>
 
         <div class="code-output-box" style="border: 1px solid #e5e8eb; border-radius: 12px; padding: 14px; background-color: var(--card-bg, #ffffff); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
