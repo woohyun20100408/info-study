@@ -284,6 +284,90 @@ export const QUIZ_DATA = {
   }
 };
 
+
+/**
+ * 문제의 유형은 유지하면서, 숫자를 포함한 코드 예제만 새 숫자로 만드는 함수.
+ * 정답과 해설도 새 숫자에 맞춰 함께 갱신한다.
+ */
+export function createRandomizedQuestion(categoryKey, question) {
+  const variant = { ...question, options: [...question.options] };
+  const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  if (categoryKey === "variables_and_types" && question.id === 4) {
+    const value = String(randomInt(1, 20)) + "." + String(randomInt(1, 99)).padStart(2, "0");
+    variant.question = variant.question.replace("a = 3.14", "a = " + value);
+    variant.explanation = value + "는 소수점이 있는 실수이므로 type() 함수를 사용하면 float(실수형)이 출력됩니다.";
+  }
+
+  if (categoryKey === "multidimensional_data" && question.id === 3) {
+    const age = randomInt(10, 25);
+    variant.question = variant.question.replace("'age': 15", "'age': " + age);
+  }
+
+  if (categoryKey === "control_structures_app" && question.id === 2) {
+    const outer = randomInt(3, 6);
+    const inner = randomInt(4, 8);
+    const total = outer * inner;
+    variant.question = variant.question
+      .replace("range(3)", "range(" + outer + ")")
+      .replace("range(4)", "range(" + inner + ")");
+    variant.options = [
+      String(outer) + "개",
+      String(inner) + "개",
+      String(outer + inner) + "개",
+      String(total) + "개"
+    ];
+    variant.answer = 3;
+    variant.explanation = "바깥쪽 반복문이 " + outer + "번, 안쪽 반복문이 " + inner +
+      "번 반복되므로 별 출력 명령은 총 " + outer + " × " + inner + " = " + total + "번 실행됩니다.";
+  }
+
+  if (categoryKey === "control_structures_app" && question.id === 4) {
+    const start = randomInt(1, 3);
+    const length = randomInt(5, 6);
+    const stop = start + length;
+    const skipped = start + randomInt(1, length - 2);
+    const allValues = Array.from({ length }, (_, index) => start + index);
+    const correctValues = allValues.filter((value) => value !== skipped);
+    const beforeSkipped = allValues.filter((value) => value < skipped);
+    const afterSkipped = allValues.filter((value) => value > skipped);
+
+    variant.question = variant.question
+      .replace("range(1, 6)", "range(" + start + ", " + stop + ")")
+      .replace("i == 3", "i == " + skipped);
+    variant.options = [
+      allValues.join(" "),
+      correctValues.join(" "),
+      beforeSkipped.join(" "),
+      afterSkipped.join(" ")
+    ];
+    variant.answer = 1;
+    variant.explanation = "range(" + start + ", " + stop + ")은 " + start + "부터 " + (stop - 1) +
+      "까지 반복합니다. i가 " + skipped + "일 때 continue가 print()를 건너뛰므로 " +
+      correctValues.join(" ") + "이 출력됩니다.";
+  }
+
+  if (categoryKey === "control_structures_app" && question.id === 5) {
+    const used = new Set();
+    const nextNumber = (parity) => {
+      let value;
+      do {
+        value = randomInt(5, 49) * 2 + parity;
+      } while (used.has(value));
+      used.add(value);
+      return value;
+    };
+    const numbers = [nextNumber(0), nextNumber(1), nextNumber(0), nextNumber(1), nextNumber(0)];
+    variant.question = variant.question.replace(
+      "numbers = [10, 15, 20, 25, 30]",
+      "numbers = [" + numbers.join(", ") + "]"
+    );
+    variant.explanation = "짝수는 2로 나눈 나머지가 0입니다. 따라서 num % 2 == 0으로 조건을 검사하면 짝수만 출력할 수 있습니다.";
+  }
+
+  return variant;
+}
+
 // ==========================================
 // 5. 퀴즈 완료 시 XP, 풀이 수, 레벨 업데이트
 // ==========================================
