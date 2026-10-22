@@ -13,6 +13,58 @@ import {
 const app = document.querySelector("#app");
 
 // ==========================================
+// 정답 효과음 (짧고 부드러운 두 음의 차임)
+// ==========================================
+let answerAudioContext = null;
+
+function playCorrectAnswerSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    if (!answerAudioContext || answerAudioContext.state === "closed") {
+      answerAudioContext = new AudioContextClass();
+    }
+
+    const context = answerAudioContext;
+    const playChime = () => {
+      const startAt = context.currentTime;
+      const notes = [
+        { frequency: 659.25, offset: 0, duration: 0.18 },
+        { frequency: 783.99, offset: 0.085, duration: 0.22 }
+      ];
+
+      notes.forEach(({ frequency, offset, duration }) => {
+        const oscillator = context.createOscillator();
+        const volume = context.createGain();
+        const noteStart = startAt + offset;
+
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency, noteStart);
+        volume.gain.setValueAtTime(0.0001, noteStart);
+        volume.gain.exponentialRampToValueAtTime(0.045, noteStart + 0.012);
+        volume.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration);
+
+        oscillator.connect(volume);
+        volume.connect(context.destination);
+        oscillator.start(noteStart);
+        oscillator.stop(noteStart + duration + 0.01);
+      });
+    };
+
+    if (context.state === "suspended") {
+      context.resume().then(playChime).catch(() => {});
+    } else {
+      playChime();
+    }
+  } catch (error) {
+    // 소리 출력이 지원되지 않더라도 퀴즈 진행에는 영향을 주지 않습니다.
+    console.debug("정답 효과음을 재생하지 못했습니다.", error);
+  }
+}
+
+
+// ==========================================
 // 공통 심플 회색 SVG 아이콘 모음 (#8b95a1)
 // ==========================================
 const ICONS = {
@@ -564,6 +616,7 @@ builtins.input = _info_study_input
 
       if (selected === correct) {
         score++;
+        playCorrectAnswerSound();
         optionBtns[selected].classList.add("correct");
         feedbackEl.innerHTML = `<p style="color: #2e7d32; font-weight: 600; margin: 0 0 4px 0;">⭕ 정답입니다!</p><small style="color: #4e5968; line-height: 1.4;">${explanation}</small>`;
       } else {
