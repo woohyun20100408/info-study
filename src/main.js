@@ -63,6 +63,54 @@ function playCorrectAnswerSound() {
   }
 }
 
+// 오답 효과음: 부담스럽지 않은 낮은 두 음으로 짧게 알림
+function playIncorrectAnswerSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    if (!answerAudioContext || answerAudioContext.state === "closed") {
+      answerAudioContext = new AudioContextClass();
+    }
+
+    const context = answerAudioContext;
+    const playSoftTone = () => {
+      const startAt = context.currentTime;
+      const notes = [
+        { frequency: 392, offset: 0, duration: 0.13 },
+        { frequency: 329.63, offset: 0.11, duration: 0.17 }
+      ];
+
+      notes.forEach(({ frequency, offset, duration }) => {
+        const oscillator = context.createOscillator();
+        const volume = context.createGain();
+        const noteStart = startAt + offset;
+
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency, noteStart);
+        volume.gain.setValueAtTime(0.0001, noteStart);
+        volume.gain.exponentialRampToValueAtTime(0.026, noteStart + 0.012);
+        volume.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration);
+
+        oscillator.connect(volume);
+        volume.connect(context.destination);
+        oscillator.start(noteStart);
+        oscillator.stop(noteStart + duration + 0.01);
+      });
+    };
+
+    if (context.state === "suspended") {
+      context.resume().then(playSoftTone).catch(() => {});
+    } else {
+      playSoftTone();
+    }
+  } catch (error) {
+    // 오디오가 지원되지 않아도 문제 풀이 자체는 계속 진행합니다.
+    console.debug("오답 효과음을 재생하지 못했습니다.", error);
+  }
+}
+
+
 
 // ==========================================
 // 공통 심플 회색 SVG 아이콘 모음 (#8b95a1)
@@ -618,11 +666,12 @@ builtins.input = _info_study_input
         score++;
         playCorrectAnswerSound();
         optionBtns[selected].classList.add("correct");
-        feedbackEl.innerHTML = `<p style="color: #2e7d32; font-weight: 600; margin: 0 0 4px 0;">⭕ 정답입니다!</p><small style="color: #4e5968; line-height: 1.4;">${explanation}</small>`;
+        feedbackEl.innerHTML = `<p style="color: #2e7d32; font-weight: 600; margin: 0 0 4px 0;">정답입니다!</p><small style="color: #4e5968; line-height: 1.4;">${explanation}</small>`;
       } else {
+        playIncorrectAnswerSound();
         optionBtns[selected].classList.add("wrong");
         optionBtns[correct].classList.add("correct");
-        feedbackEl.innerHTML = `<p style="color: #c62828; font-weight: 600; margin: 0 0 4px 0;">❌ 오답입니다.</p><small style="color: #4e5968; line-height: 1.4;">${explanation}</small>`;
+        feedbackEl.innerHTML = `<p style="color: #c62828; font-weight: 600; margin: 0 0 4px 0;">오답입니다.</p><small style="color: #4e5968; line-height: 1.4;">${explanation}</small>`;
       }
 
       feedbackEl.classList.remove("hidden");
