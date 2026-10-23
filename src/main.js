@@ -488,8 +488,21 @@ function showApp(user) {
 
     if (tabName === "ranking") {
       mainContent.innerHTML = `<div class="empty-state"><p class="gray-text">랭킹 정보를 불러오는 중...</p></div>`;
-      const rankData = await getTopRankings(10);
-      mainContent.innerHTML = renderRanking(currentUser, rankData);
+      try {
+        const rankData = await getTopRankings(10);
+        mainContent.innerHTML = renderRanking(currentUser, rankData);
+      } catch (error) {
+        console.error("랭킹 화면 표시 실패:", error);
+        mainContent.innerHTML = `
+          <section class="page-header fade-in">
+            <h1>실시간 랭킹</h1>
+            <p class="gray-text">랭킹 정보를 불러오지 못했습니다. 인터넷 연결이나 Firebase 권한을 확인해 주세요.</p>
+            <button id="retry-ranking-btn" class="google-button" style="margin-top: 12px;">다시 불러오기</button>
+          </section>
+        `;
+        const retryButton = mainContent.querySelector("#retry-ranking-btn");
+        if (retryButton) retryButton.addEventListener("click", () => switchTab("ranking"));
+      }
     } else if (tabName === "home") {
       mainContent.innerHTML = renderHome(currentUser);
       bindHomeEvents();
@@ -996,7 +1009,8 @@ builtins.input = _info_study_input
       return `
         <section class="page-header fade-in">
           <h1>실시간 랭킹</h1>
-          <p class="gray-text">등록된 랭킹 데이터가 없습니다.</p>
+          <p class="gray-text">아직 랭킹에 표시할 사용자가 없습니다.</p>
+          <p class="gray-text" style="font-size: 13px; margin-top: 8px;">Google 계정으로 로그인한 뒤 퀴즈를 풀면 XP와 함께 순위가 표시됩니다. 게스트 계정은 랭킹에서 제외됩니다.</p>
         </section>
       `;
     }
