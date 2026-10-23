@@ -1,6 +1,6 @@
 import "./style.css";
 import { loginWithGoogle } from "./auth";
-import { getTopRankings } from "./ranking";
+import { subscribeTopRankings, syncRankingEntry } from "./ranking";
 import { 
   QUIZ_DATA, 
   finishQuiz, 
@@ -303,6 +303,7 @@ async function initApp() {
       const freshProfile = await getUserProfile(parsedUser.uid);
       if (freshProfile) {
         localStorage.setItem("infoStudy_user", JSON.stringify(freshProfile));
+        await syncRankingEntry(parsedUser.uid, { ...freshProfile, isGuest: false });
         showApp(freshProfile);
       } else {
         // 이전 버전에서 로그인했지만 Firestore 프로필 저장에 실패한 계정을 복구합니다.
@@ -402,6 +403,11 @@ function showLogin() {
         window.swingWebViewPlugin.app.login.doAppLogin(userData.uid, userData.nickname);
       }
 
+      // 이전에 만들어진 사용자 프로필도 로그인 시 랭킹 DB에 반영합니다.
+      if (existingProfile) {
+        await syncRankingEntry(user.uid, { ...userData, isGuest: false });
+      }
+
       localStorage.setItem("infoStudy_user", JSON.stringify(userData));
       showApp(userData);
     }
@@ -471,7 +477,14 @@ function showApp(user) {
   const mainContent = document.querySelector("#main-content");
   const navButtons = document.querySelectorAll(".nav-btn");
 
+  let stopRankingUpdates = null;
+
   async function switchTab(tabName) {
+    if (stopRankingUpdates) {
+      stopRankingUpdates();
+      stopRankingUpdates = null;
+    }
+
     let currentUser = JSON.parse(localStorage.getItem("infoStudy_user")) || user;
     
     if (!currentUser.isGuest) {
@@ -487,21 +500,37 @@ function showApp(user) {
     });
 
     if (tabName === "ranking") {
-      mainContent.innerHTML = `<div class="empty-state"><p class="gray-text">랭킹 정보를 불러오는 중...</p></div>`;
-      try {
-        const rankData = await getTopRankings(10);
-        mainContent.innerHTML = renderRanking(currentUser, rankData);
-      } catch (error) {
+      mainContent.innerHTML = `<div class="empty-state"><p class="gray-text">Realtime Database에서 랭킹을 불러오는 중...</p></div>`;
+
+      const showRankingError = (error) => {
         console.error("랭킹 화면 표시 실패:", error);
+        const rankingButton = document.querySelector('.nav-btn[data-tab="ranking"]');
+        if (!rankingButton?.classList.contains("active")) return;
+
         mainContent.innerHTML = `
           <section class="page-header fade-in">
             <h1>실시간 랭킹</h1>
-            <p class="gray-text">랭킹 정보를 불러오지 못했습니다. 인터넷 연결이나 Firebase 권한을 확인해 주세요.</p>
+            <p class="gray-text">Realtime Database에 연결하지 못했습니다. 데이터베이스 URL과 보안 규칙을 확인해 주세요.</p>
             <button id="retry-ranking-btn" class="google-button" style="margin-top: 12px;">다시 불러오기</button>
           </section>
         `;
         const retryButton = mainContent.querySelector("#retry-ranking-btn");
         if (retryButton) retryButton.addEventListener("click", () => switchTab("ranking"));
+      };
+
+      try {
+        stopRankingUpdates = subscribeTopRankings(
+          10,
+          (rankData) => {
+            const rankingButton = document.querySelector('.nav-btn[data-tab="ranking"]');
+            if (rankingButton?.classList.contains("active")) {
+              mainContent.innerHTML = renderRanking(currentUser, rankData);
+            }
+          },
+          showRankingError
+        );
+      } catch (error) {
+        showRankingError(error);
       }
     } else if (tabName === "home") {
       mainContent.innerHTML = renderHome(currentUser);
