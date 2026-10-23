@@ -86,7 +86,7 @@ function playIncorrectAnswerSound() {
         oscillator.type = "sine";
         oscillator.frequency.setValueAtTime(frequency, noteStart);
         volume.gain.setValueAtTime(0.0001, noteStart);
-        volume.gain.exponentialRampToValueAtTime(0.075, noteStart + 0.012);
+        volume.gain.exponentialRampToValueAtTime(0.12, noteStart + 0.012);
         volume.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration);
 
         oscillator.connect(volume);
