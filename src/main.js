@@ -305,7 +305,26 @@ async function initApp() {
         localStorage.setItem("infoStudy_user", JSON.stringify(freshProfile));
         showApp(freshProfile);
       } else {
-        showApp(parsedUser);
+        // 이전 버전에서 로그인했지만 Firestore 프로필 저장에 실패한 계정을 복구합니다.
+        const recoveredProfile = {
+          uid: parsedUser.uid,
+          nickname: parsedUser.nickname || parsedUser.displayName || "학습자",
+          email: parsedUser.email || "",
+          xp: Number(parsedUser.xp) || 0,
+          level: Number(parsedUser.level) || 1,
+          solvedProblems: Number(parsedUser.solvedProblems) || 0,
+          isGuest: false
+        };
+        await updateUserProfile(parsedUser.uid, {
+          nickname: recoveredProfile.nickname,
+          email: recoveredProfile.email,
+          xp: recoveredProfile.xp,
+          level: recoveredProfile.level,
+          solvedProblems: recoveredProfile.solvedProblems,
+          isGuest: false
+        });
+        localStorage.setItem("infoStudy_user", JSON.stringify(recoveredProfile));
+        showApp(recoveredProfile);
       }
     }
   } else {
@@ -372,7 +391,9 @@ function showLogin() {
           nickname: userData.nickname,
           email: userData.email,
           xp: userData.xp,
-          level: userData.level
+          level: userData.level,
+          solvedProblems: userData.solvedProblems || 0,
+          isGuest: false
         });
       }
 
