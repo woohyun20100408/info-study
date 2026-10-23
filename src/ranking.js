@@ -25,6 +25,6 @@ export async function getTopRankings(limitCount = 10) {
     return rankings.slice(0, limitCount);
   } catch (error) {
     console.error("랭킹 불러오기 실패:", error);
-    return [];
+    throw error;
   }
 }
