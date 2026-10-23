@@ -123,6 +123,122 @@ const ICONS = {
 };
 
 // ==========================================
+// 아두이노 코드 학습 퀴즈 (기초 10문제)
+// ==========================================
+const ARDUINO_QUESTIONS = [
+  {
+    "question": "아두이노 스케치에서 setup()과 loop()의 역할을 올바르게 설명한 것은 무엇인가요?",
+    "options": [
+      "setup()은 한 번 실행되고, loop()는 보드가 작동하는 동안 반복 실행된다.",
+      "setup()과 loop()는 모두 한 번만 실행된다.",
+      "setup()이 계속 반복되고, loop()는 한 번만 실행된다.",
+      "두 함수는 반드시 없어도 같은 방식으로 동작한다."
+    ],
+    "answer": 0,
+    "explanation": "setup()은 전원 공급 또는 리셋 뒤 한 번 초기 설정을 할 때 사용하고, loop()는 그 이후 계속 반복 실행됩니다."
+  },
+  {
+    "question": "다음 코드의 pinMode(LED_PIN, OUTPUT)은 무엇을 설정하나요?\n\nconst int LED_PIN = 13;\nvoid setup() {\n  pinMode(LED_PIN, OUTPUT);\n}",
+    "options": [
+      "13번 핀을 출력용으로 설정한다.",
+      "13번 핀에서 아날로그 값을 읽는다.",
+      "13번 핀을 통신 속도 13으로 설정한다.",
+      "LED를 자동으로 13번 깜빡이게 한다."
+    ],
+    "answer": 0,
+    "explanation": "pinMode()는 핀의 동작 모드를 설정합니다. OUTPUT은 해당 핀으로 HIGH나 LOW 신호를 출력할 때 사용합니다."
+  },
+  {
+    "question": "다음 코드가 일반적인 LED 회로에서 실행되면 어떤 동작을 하나요?\n\ndigitalWrite(13, HIGH);",
+    "options": [
+      "13번 핀을 입력 모드로 바꾼다.",
+      "13번 핀에서 아날로그 값을 읽는다.",
+      "13번 핀을 HIGH 상태로 출력해 LED를 켠다.",
+      "프로그램을 즉시 종료한다."
+    ],
+    "answer": 2,
+    "explanation": "digitalWrite()는 디지털 핀에 HIGH 또는 LOW를 출력합니다. 일반적인 HIGH-활성 LED 회로에서는 HIGH가 켜짐, LOW가 꺼짐에 해당합니다."
+  },
+  {
+    "question": "아두이노 코드에서 delay(1000);은 얼마나 기다리나요?",
+    "options": [
+      "1000초",
+      "1초",
+      "100밀리초",
+      "프로그램을 멈추지 않고 즉시 다음 줄로 이동한다."
+    ],
+    "answer": 1,
+    "explanation": "delay()의 단위는 밀리초(ms)입니다. 1000밀리초는 1초입니다."
+  },
+  {
+    "question": "버튼을 2번 핀과 GND 사이에 연결하고 pinMode(2, INPUT_PULLUP)을 사용했습니다. 버튼을 눌렀을 때 일반적으로 digitalRead(2)는 무엇을 반환하나요?",
+    "options": [
+      "HIGH",
+      "1023",
+      "2",
+      "LOW"
+    ],
+    "answer": 3,
+    "explanation": "INPUT_PULLUP은 내부 풀업 저항을 사용합니다. 버튼이 눌려 핀이 GND에 연결되면 LOW, 누르지 않으면 HIGH로 읽히는 구성이 일반적입니다."
+  },
+  {
+    "question": "Arduino Uno에서 analogRead(A0)의 반환값 범위로 알맞은 것은 무엇인가요?",
+    "options": [
+      "0부터 1023까지",
+      "0부터 255까지",
+      "-100부터 100까지",
+      "항상 0 또는 1"
+    ],
+    "answer": 0,
+    "explanation": "Arduino Uno의 기본 ADC는 10비트이므로 analogRead() 결과는 일반적으로 0~1023 범위입니다."
+  },
+  {
+    "question": "Arduino Uno에서 analogWrite(9, 128);을 실행했을 때 가장 알맞은 설명은 무엇인가요?",
+    "options": [
+      "9번 핀에서 128볼트를 출력한다.",
+      "9번 핀을 입력 전용으로 설정한다.",
+      "PWM 출력값 0~255 중 128에 해당하는 신호를 출력한다.",
+      "9번 핀의 아날로그 입력을 읽는다."
+    ],
+    "answer": 2,
+    "explanation": "Uno의 analogWrite()는 PWM을 지원하는 핀에서 0~255 값으로 출력 세기를 조절합니다. 128은 대략 절반 수준의 듀티 사이클에 해당합니다."
+  },
+  {
+    "question": "Serial.begin(9600);의 목적은 무엇인가요?",
+    "options": [
+      "디지털 9600번 핀을 켠다.",
+      "시리얼 통신 속도를 9600 baud로 설정한다.",
+      "프로그램을 9600초 동안 대기시킨다.",
+      "아날로그 입력 범위를 9600으로 변경한다."
+    ],
+    "answer": 1,
+    "explanation": "Serial.begin(9600)은 시리얼 통신을 시작하고 통신 속도를 9600 baud로 설정합니다. 시리얼 모니터의 속도도 일치시켜야 합니다."
+  },
+  {
+    "question": "가변저항이나 조도 센서처럼 아날로그 값을 읽기 위한 코드로 알맞은 것은 무엇인가요?",
+    "options": [
+      "digitalWrite(A0, HIGH);",
+      "pinMode(A0, OUTPUT);",
+      "delay(A0);",
+      "int sensorValue = analogRead(A0);"
+    ],
+    "answer": 3,
+    "explanation": "analogRead(A0)는 A0 핀에서 아날로그 입력값을 읽어 반환합니다. 센서값을 변수에 저장해 조건 판단 등에 사용할 수 있습니다."
+  },
+  {
+    "question": "다음 코드가 계속 실행될 때 LED의 동작은 무엇인가요?\n\nconst int ledPin = 13;\nvoid setup() {\n  pinMode(ledPin, OUTPUT);\n}\nvoid loop() {\n  digitalWrite(ledPin, HIGH);\n  delay(500);\n  digitalWrite(ledPin, LOW);\n  delay(500);\n}",
+    "options": [
+      "LED가 한 번 켜진 뒤 계속 켜져 있다.",
+      "LED가 5초 켜지고 5초 꺼진다.",
+      "LED가 0.5초 켜지고 0.5초 꺼지는 동작을 반복한다.",
+      "LED 핀을 입력 모드로 바꿔 버튼을 읽는다."
+    ],
+    "answer": 2,
+    "explanation": "loop()가 반복되며 LED를 켠 뒤 500ms 기다리고, 끈 뒤 다시 500ms 기다립니다. 따라서 0.5초 켜짐과 0.5초 꺼짐이 반복됩니다."
+  }
+];
+
+// ==========================================
 // 파이썬 실행 엔진 (Pyodide) 인스턴스
 // ==========================================
 let pyodideInstance = null;
@@ -372,6 +488,13 @@ function showApp(user) {
         startQuiz();
       });
     }
+
+    const arduinoStudyCard = document.querySelector(".arduino-study-card");
+    if (arduinoStudyCard) {
+      arduinoStudyCard.addEventListener("click", () => {
+        startQuiz("arduino");
+      });
+    }
   }
 
   function bindStudyEvents() {
@@ -508,24 +631,28 @@ builtins.input = _info_study_input
     }
   }
 
-  function startQuiz() {
-    // 모든 단원에서 문제만 추출
+  function startQuiz(mode = "random") {
+    // 아두이노 학습은 준비된 10문제를 모두 사용하고, 일반 퀴즈는 기존 단원에서 추출합니다.
     let allQuestions = [];
-    Object.keys(QUIZ_DATA).forEach((key) => {
-      if (QUIZ_DATA[key] && Array.isArray(QUIZ_DATA[key].questions)) {
-        allQuestions.push(...QUIZ_DATA[key].questions.map((question) => createRandomizedQuestion(key, question)));
-      }
-    });
+    if (mode === "arduino") {
+      allQuestions = ARDUINO_QUESTIONS;
+    } else {
+      Object.keys(QUIZ_DATA).forEach((key) => {
+        if (QUIZ_DATA[key] && Array.isArray(QUIZ_DATA[key].questions)) {
+          allQuestions.push(...QUIZ_DATA[key].questions.map((question) => createRandomizedQuestion(key, question)));
+        }
+      });
+    }
 
     if (allQuestions.length === 0) {
       alert("현재 푸실 수 있는 문제가 없습니다.");
       return;
     }
 
-    // 문제 무작위 셔플 후 최대 5개 선택
-    const questions = [...allQuestions]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 5);
+    // 일반 랜덤 퀴즈는 기존처럼 5문제, 아두이노 코스는 10문제 전체를 출제합니다.
+    const questions = mode === "arduino"
+      ? [...allQuestions]
+      : [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 5);
 
     let currentIndex = 0;
     let score = 0;
@@ -590,7 +717,7 @@ builtins.input = _info_study_input
 
       <div class="quiz-compact-container fade-in">
         <div class="quiz-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span class="quiz-category" style="font-size: 13px; color: #3182f6; font-weight: 600;">랜덤 퀴즈</span>
+          <span class="quiz-category" style="font-size: 13px; color: #3182f6; font-weight: 600;">${mode === "arduino" ? "아두이노 코드 학습" : "랜덤 퀴즈"}</span>
           <span class="quiz-step" style="font-size: 13px; color: #8b95a1;">1 / ${questions.length}</span>
         </div>
 
@@ -780,6 +907,28 @@ builtins.input = _info_study_input
           <div class="study-info" style="flex: 1;">
             <h3>랜덤 퀴즈 시작하기</h3>
             <p>전체 학습 코스 중 무작위 문제 풀이</p>
+          </div>
+          <div class="arrow">›</div>
+        </button>
+      </section>
+
+      <section class="section fade-in">
+        <div class="section-title">
+          <h2>코드 학습</h2>
+        </div>
+
+        <button class="study-card arduino-study-card" style="cursor: pointer; text-align: left; width: 100%; display: flex; align-items: center; margin-top: 12px;">
+          <div class="study-icon" style="display: flex; align-items: center; justify-content: center; background: var(--primary-light); color: #0f9d58; width: 40px; height: 40px; border-radius: 8px; margin-right: 12px; flex-shrink: 0;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="7" y="7" width="10" height="10" rx="2"></rect>
+              <path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"></path>
+              <circle cx="10" cy="10" r=".7" fill="currentColor" stroke="none"></circle>
+              <path d="M10 13h4"></path>
+            </svg>
+          </div>
+          <div class="study-info" style="flex: 1;">
+            <h3>아두이노 코드 학습</h3>
+            <p>LED, 핀 설정, 센서, 시리얼 통신 기초 10문제</p>
           </div>
           <div class="arrow">›</div>
         </button>
