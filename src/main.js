@@ -12,9 +12,6 @@ import {
 
 const app = document.querySelector("#app");
 
-// ==========================================
-// 정답 효과음 (짧고 부드러운 두 음의 차임)
-// ==========================================
 let answerAudioContext = null;
 
 function playCorrectAnswerSound() {
