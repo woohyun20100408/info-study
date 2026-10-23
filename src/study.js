@@ -74,7 +74,8 @@ export async function getUserProfile(uid) {
 export async function updateUserProfile(uid, updateData) {
   try {
     const userRef = doc(db, "users", uid);
-    await updateDoc(userRef, updateData);
+    // updateDoc은 문서가 없으면 실패하므로 setDoc + merge로 신규 프로필도 저장할 수 있게 합니다.
+    await setDoc(userRef, updateData, { merge: true });
     return true;
   } catch (error) {
     console.error("❌ 프로필 업데이트 실패:", error);
