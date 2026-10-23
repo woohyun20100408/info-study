@@ -204,24 +204,36 @@ function showLogin() {
   initTheme();
   app.innerHTML = `
     <div class="login-page">
-      <div class="login-content">
-        <div class="logo">인포스터디</div>
-        <p class="login-subtitle">
-          공부하면 성장하는<br>
-          정보 학습 서비스
-        </p>
+      <section class="login-content" aria-label="인포스터디 로그인">
+        <div class="login-brand">
+          <div class="login-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M3 9.5 12 5l9 4.5-9 4.5-9-4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M6.5 11.5v4.2c3.5 2.7 7.5 2.7 11 0v-4.2M21 9.5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h1 class="login-brand-name">인포스터디</h1>
+          <p class="login-description">로그인하고 학습을 시작하세요.</p>
+        </div>
 
         <button id="google-login" class="google-button">
-          <span>Google로 시작하기</span>
+          <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z" transform="translate(0 4)"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.76 7.18l7.73 6C44.42 38.02 46.98 31.8 46.98 24.55Z"/>
+            <path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a23.9 23.9 0 0 0 0 21.56l7.98-6.19Z" transform="translate(0 4)"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6c-2.14 1.44-4.88 2.3-8.18 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z" transform="translate(0 -2)"/>
+          </svg>
+          <span>Google로 계속하기</span>
         </button>
 
-        <div style="margin-top: 16px; width: 100%;">
-          <input type="text" id="guest-nickname-input" placeholder="게스트 닉네임 입력" style="width: 100%; padding: 12px; border: 1px solid #e5e8eb; border-radius: 8px; font-size: 14px; margin-bottom: 8px; outline: none; box-sizing: border-box;" />
-          <button id="guest-login" class="google-button" style="background-color: #f1f3f5; color: #495057; border: none; width: 100%;">
-            <span>게스트로 둘러보기</span>
-          </button>
+        <div class="login-divider"><span>또는</span></div>
+
+        <div class="guest-login-panel">
+          <label class="guest-label" for="guest-nickname-input">닉네임으로 체험하기</label>
+          <input type="text" id="guest-nickname-input" class="guest-nickname-input" maxlength="10" placeholder="사용할 닉네임" autocomplete="nickname" />
+          <button id="guest-login" class="guest-button">게스트로 시작하기</button>
         </div>
-      </div>
+      </section>
     </div>
   `;
 
