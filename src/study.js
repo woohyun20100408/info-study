@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { signInAnonymously } from "firebase/auth";
 import { db, auth } from "./firebase";
+import { syncRankingEntry } from "./ranking";
 
 // ==========================================
 // 1. 게스트 로그인
@@ -74,8 +75,12 @@ export async function getUserProfile(uid) {
 export async function updateUserProfile(uid, updateData) {
   try {
     const userRef = doc(db, "users", uid);
-    // updateDoc은 문서가 없으면 실패하므로 setDoc + merge로 신규 프로필도 저장할 수 있게 합니다.
+    // Firestore 프로필은 유지하고, 갱신된 전체 프로필을 랭킹 DB에도 동기화합니다.
     await setDoc(userRef, updateData, { merge: true });
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      await syncRankingEntry(uid, userSnap.data());
+    }
     return true;
   } catch (error) {
     console.error("❌ 프로필 업데이트 실패:", error);
@@ -395,6 +400,15 @@ export async function finishQuiz(uid, earnedXP, solvedCount) {
       xp: updatedXP,
       solvedProblems: updatedSolved,
       level: newLevel
+    });
+
+    await syncRankingEntry(uid, {
+      ...userData,
+      uid,
+      xp: updatedXP,
+      solvedProblems: updatedSolved,
+      level: newLevel,
+      isGuest: false
     });
   } catch (error) {
     console.error("❌ XP 업데이트 실패:", error);
