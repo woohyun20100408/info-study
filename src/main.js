@@ -609,7 +609,6 @@ def _info_study_input(prompt=""):
         value = next(_info_study_input_lines)
     except StopIteration:
         raise EOFError("input()에 사용할 입력값이 부족합니다. 입력값 칸에 한 줄씩 추가하세요.")
-    print(value)
     return value
 
 builtins.input = _info_study_input
