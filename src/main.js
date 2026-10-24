@@ -15,6 +15,8 @@ const app = document.querySelector("#app");
 let answerAudioContext = null;
 
 function playCorrectAnswerSound() {
+  if (localStorage.getItem("infoStudy_soundEffects") === "off") return;
+
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
 
@@ -62,6 +64,8 @@ function playCorrectAnswerSound() {
 
 // 오답 효과음: 부담스럽지 않은 낮은 두 음으로 짧게 알림
 function playIncorrectAnswerSound() {
+  if (localStorage.getItem("infoStudy_soundEffects") === "off") return;
+
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
 
@@ -653,6 +657,27 @@ builtins.input = _info_study_input
       });
     }
 
+    const soundToggleBtn = document.querySelector("#sound-toggle-btn");
+    if (soundToggleBtn) {
+      soundToggleBtn.addEventListener("click", () => {
+        const isEnabled = localStorage.getItem("infoStudy_soundEffects") === "off";
+        localStorage.setItem("infoStudy_soundEffects", isEnabled ? "on" : "off");
+        soundToggleBtn.setAttribute("aria-pressed", String(isEnabled));
+
+        const soundLabel = document.querySelector("#sound-label");
+        if (soundLabel) {
+          soundLabel.textContent = `정답·오답 효과음 ${isEnabled ? "켜짐" : "꺼짐"}`;
+        }
+
+        const soundState = document.querySelector("#sound-toggle-state");
+        if (soundState) {
+          soundState.textContent = isEnabled ? "ON" : "OFF";
+          soundState.classList.toggle("is-on", isEnabled);
+          soundState.classList.toggle("is-off", !isEnabled);
+        }
+      });
+    }
+
     const saveNicknameBtn = document.querySelector("#save-nickname-btn");
     const nicknameInput = document.querySelector("#nickname-input");
 
@@ -1108,6 +1133,7 @@ builtins.input = _info_study_input
 
   function renderMyInfo(user) {
     const isDark = document.body.classList.contains("dark-mode");
+    const isSoundEnabled = localStorage.getItem("infoStudy_soundEffects") !== "off";
     const nickname = user.nickname || user.displayName || "학습자";
 
     return `
@@ -1139,10 +1165,18 @@ builtins.input = _info_study_input
             <span class="arrow">›</span>
           </button>
 
-          <!-- 🔥 APK 다운로드 버튼 -->
+          <button id="sound-toggle-btn" class="menu-item" type="button" aria-pressed="${isSoundEnabled}">
+            <div class="menu-item-left">
+              <span>효과음</span>
+              <small id="sound-label" class="gray-text" style="display:block; font-size:12px; margin-top:2px;">정답·오답 효과음 ${isSoundEnabled ? "켜짐" : "꺼짐"}</small>
+            </div>
+            <span id="sound-toggle-state" class="sound-toggle-state ${isSoundEnabled ? "is-on" : "is-off"}">${isSoundEnabled ? "ON" : "OFF"}</span>
+          </button>
+
+          <!-- APK 다운로드 버튼 -->
           <button id="download-apk-btn" class="menu-item">
             <div class="menu-item-left">
-              <span style="font-weight: 600; color: #3182f6;">Android 앱(APK) 다운로드</span>
+              <span style="font-weight: 600; color: #3182f6;">안드로이드 앱 다운로드(베타)</span>
               <small class="gray-text" style="display:block; font-size:12px; margin-top:2px;">인포스터디 앱 설치 파일 받기</small>
             </div>
             <span class="arrow">›</span>
