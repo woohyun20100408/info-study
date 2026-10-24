@@ -977,7 +977,7 @@ builtins.input = _info_study_input
 
       <section class="section fade-in">
         <div class="section-title">
-          <h2>코드 학습</h2>
+          <h2>기타</h2>
         </div>
 
         <button class="study-card arduino-study-card" style="cursor: pointer; text-align: left; width: 100%; display: flex; align-items: center; margin-top: 12px;">
@@ -991,7 +991,7 @@ builtins.input = _info_study_input
           </div>
           <div class="study-info" style="flex: 1;">
             <h3>아두이노 코드 학습</h3>
-            <p>LED, 핀 설정, 센서, 시리얼 통신 기초 10문제</p>
+            <p>LED, 핀 설정, 센서, 시리얼 통신 기초</p>
           </div>
           <div class="arrow">›</div>
         </button>
